@@ -2,6 +2,7 @@ import { useEffect, useReducer } from 'react';
 
 const rows = 6;
 const cols = 5;
+const ans = 'RIGHT';
 
 const initialState = {
   array: Array(rows)
@@ -16,7 +17,7 @@ function reducer(state, action) {
     case 'ADD_LETTER': {
       if (state.nowCol >= cols) return state;
       const newArray = [...state.array];
-      newArray[action.row][action.col] = action.letter.toUpperCase();
+      newArray[state.nowRow][state.nowCol] = action.letter.toUpperCase();
       return {
         ...state,
         array: newArray,
@@ -26,7 +27,7 @@ function reducer(state, action) {
     case 'REMOVE_LETTER': {
       if (state.nowCol <= 0) return state;
       const newArray = [...state.array];
-      newArray[action.row][action.col - 1] = '';
+      newArray[state.nowRow][state.nowCol - 1] = '';
       return {
         ...state,
         array: newArray,
@@ -34,7 +35,21 @@ function reducer(state, action) {
       };
     }
     case 'SUBMIT_GUESS': {
-      return state;
+      if (state.nowCol < cols) {
+        return state;
+      } else {
+        if (
+          state.array[state.nowRow].join('') === ans ||
+          state.nowRow >= rows
+        ) {
+          return state;
+        }
+        return {
+          ...state,
+          nowRow: state.nowRow + 1,
+          nowCol: 0,
+        };
+      }
     }
     default:
       return state;
@@ -50,14 +65,11 @@ function App() {
         case 'Enter':
           dispatch({
             type: 'SUBMIT_GUESS',
-            row: state.nowRow,
           });
           break;
         case 'Backspace':
           dispatch({
             type: 'REMOVE_LETTER',
-            row: state.nowRow,
-            col: state.nowCol,
           });
           break;
         default:
@@ -65,8 +77,6 @@ function App() {
             dispatch({
               type: 'ADD_LETTER',
               letter: event.key,
-              row: state.nowRow,
-              col: state.nowCol,
             });
           }
       }
@@ -76,23 +86,16 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
-  }, [state.nowRow, state.nowCol]);
+  }, []);
 
   return (
-    <div
-      className="flex flex-col"
-      style={{
-        width: '350px',
-        margin: '20px auto 0px',
-      }}
-    >
+    <div className="flex flex-col w-[350px] mx-auto mt-5">
       {state.array.map((row, i) => (
         <div key={i} className="flex justify-between mb-2">
           {row.map((cell, j) => (
             <div
               key={j}
-              className="flex items-center justify-center border border-gray-300"
-              style={{ width: '62px', height: '62px', fontSize: '24px' }}
+              className="flex items-center justify-center border border-gray-300 w-[62px] h-[62px] text-base"
             >
               {cell}
             </div>
