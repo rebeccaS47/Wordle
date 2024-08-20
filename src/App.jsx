@@ -1,30 +1,73 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useReducer } from 'react';
 
 const rows = 6;
 const cols = 5;
 
+const initialState = {
+  array: Array(rows)
+    .fill()
+    .map(() => Array(cols).fill('')),
+  nowRow: 0,
+  nowCol: 0,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'ADD_LETTER': {
+      if (state.nowCol >= cols) return state;
+      const newArray = [...state.array];
+      newArray[action.row][action.col] = action.letter.toUpperCase();
+      return {
+        ...state,
+        array: newArray,
+        nowCol: state.nowCol + 1,
+      };
+    }
+    case 'REMOVE_LETTER': {
+      if (state.nowCol <= 0) return state;
+      const newArray = [...state.array];
+      newArray[action.row][action.col - 1] = '';
+      return {
+        ...state,
+        array: newArray,
+        nowCol: state.nowCol - 1,
+      };
+    }
+    case 'SUBMIT_GUESS': {
+      return state;
+    }
+    default:
+      return state;
+  }
+}
 function App() {
-  const [array, setArray] = useState(
-    Array(rows)
-      .fill()
-      .map(() => Array(cols).fill(''))
-  );
-  const [nowRow, setNowRow] = useState(0);
-  const [nowCol, setNowCol] = useState(0);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     const handleKeydown = (event) => {
       event.preventDefault();
       switch (event.key) {
         case 'Enter':
-          console.log(array[nowRow]);
+          dispatch({
+            type: 'SUBMIT_GUESS',
+            row: state.nowRow,
+          });
           break;
         case 'Backspace':
-          removeLetterInBox(nowRow, nowCol);
+          dispatch({
+            type: 'REMOVE_LETTER',
+            row: state.nowRow,
+            col: state.nowCol,
+          });
           break;
         default:
           if (/^[a-zA-Z]$/.test(event.key)) {
-            addLetterInBox(event.key, nowRow, nowCol);
+            dispatch({
+              type: 'ADD_LETTER',
+              letter: event.key,
+              row: state.nowRow,
+              col: state.nowCol,
+            });
           }
       }
     };
@@ -33,25 +76,7 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
-  }, [nowRow, nowCol, array]);
-
-  function removeLetterInBox(i, j) {
-    setArray((prevArray) => {
-      const newArray = [...prevArray];
-      newArray[i][j - 1] = '';
-      return newArray;
-    });
-    setNowCol((prevCol) => prevCol - 1);
-  }
-
-  function addLetterInBox(letter, i, j) {
-    setArray((prevArray) => {
-      const newArray = [...prevArray];
-      newArray[i][j] = letter.toUpperCase();
-      return newArray;
-    });
-    setNowCol((prevCol) => prevCol + 1);
-  }
+  }, [state.nowRow, state.nowCol]);
 
   return (
     <div
@@ -61,7 +86,7 @@ function App() {
         margin: '20px auto 0px',
       }}
     >
-      {array.map((row, i) => (
+      {state.array.map((row, i) => (
         <div key={i} className="flex justify-between mb-2">
           {row.map((cell, j) => (
             <div
