@@ -1,4 +1,6 @@
 import { useEffect, useReducer } from 'react';
+import { db } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const rows = 6;
 const cols = 5;
