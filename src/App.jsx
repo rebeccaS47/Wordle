@@ -7,16 +7,17 @@ const ans = 'RIGHT';
 const initialState = {
   array: Array(rows)
     .fill()
-    .map(() => Array(cols).fill(' ')),
+    .map(() => Array(cols).fill('')),
   nowRow: 0,
   nowCol: 0,
 };
 
 function reducer(state, action) {
+  if (state.nowCol === -1) return state;
   switch (action.type) {
     case 'ADD_LETTER': {
       if (state.nowCol >= cols) return state;
-      const newArray = [...state.array];
+      const newArray = JSON.parse(JSON.stringify([...state.array]));
       newArray[state.nowRow][state.nowCol] = action.letter.toUpperCase();
       return {
         ...state,
@@ -26,8 +27,8 @@ function reducer(state, action) {
     }
     case 'REMOVE_LETTER': {
       if (state.nowCol <= 0) return state;
-      const newArray = [...state.array];
-      newArray[state.nowRow][state.nowCol - 1] = ' ';
+      const newArray = JSON.parse(JSON.stringify([...state.array]));
+      newArray[state.nowRow][state.nowCol - 1] = '';
       return {
         ...state,
         array: newArray,
@@ -36,10 +37,20 @@ function reducer(state, action) {
     }
     case 'SUBMIT_GUESS': {
       if (state.nowCol < cols) return state;
-
-      // if (state.array[state.nowRow].join('') === ans || state.nowRow >= rows) {
-      //   return state;
-      // }
+      if (state.array[state.nowRow].join('') === ans) {
+        setTimeout(() => {
+          alert('你答對了!!!');
+        }, 100);
+        return {
+          ...state,
+          nowRow: state.nowRow + 1,
+          nowCol: -1,
+        };
+      }
+      if (state.nowRow === rows - 1 && state.nowCol === cols) {
+        alert('再多嘗試幾次吧~~');
+        return initialState;
+      }
       return {
         ...state,
         nowRow: state.nowRow + 1,
@@ -52,6 +63,7 @@ function reducer(state, action) {
 }
 
 function getColor(letter, i, j, row) {
+  if (!letter) return 'bg-white';
   if (i < row) {
     if (letter === ans[j]) {
       return 'bg-green-500';
@@ -61,7 +73,6 @@ function getColor(letter, i, j, row) {
       return 'bg-gray-500';
     }
   }
-  return 'bg-white';
 }
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
