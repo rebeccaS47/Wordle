@@ -10,10 +10,10 @@ const initialState = {
     .map(() => Array(cols).fill('')),
   nowRow: 0,
   nowCol: 0,
+  gameStatus: 'playing',
 };
 
 function reducer(state, action) {
-  if (state.nowCol === -1) return state;
   switch (action.type) {
     case 'ADD_LETTER': {
       if (state.nowCol >= cols) return state;
@@ -37,25 +37,26 @@ function reducer(state, action) {
     }
     case 'SUBMIT_GUESS': {
       if (state.nowCol < cols) return state;
-      if (state.array[state.nowRow].join('') === ans) {
-        setTimeout(() => {
-          alert('你答對了!!!');
-        }, 100);
+      if (state.array[state.nowRow].join('') === ans)
         return {
           ...state,
           nowRow: state.nowRow + 1,
-          nowCol: -1,
+          gameStatus: 'complete',
         };
-      }
-      if (state.nowRow === rows - 1 && state.nowCol === cols) {
-        alert('再多嘗試幾次吧~~');
-        return initialState;
-      }
+      if (state.nowRow === rows - 1 && state.nowCol === cols)
+        return {
+          ...state,
+          nowRow: state.nowRow + 1,
+          gameStatus: 'fail',
+        };
       return {
         ...state,
         nowRow: state.nowRow + 1,
         nowCol: 0,
       };
+    }
+    case 'RESET': {
+      return initialState;
     }
     default:
       return state;
@@ -65,21 +66,19 @@ function reducer(state, action) {
 function getColor(letter, i, j, row) {
   if (!letter) return 'bg-white';
   if (i < row) {
-    if (letter === ans[j]) {
-      return 'bg-green-500';
-    } else if (ans.includes(letter)) {
-      return 'bg-yellow-500';
-    } else {
+    if (letter === ans[j]) return 'bg-green-500';
+    if (ans.includes(letter)) return 'bg-yellow-500';
+    else {
       return 'bg-gray-500';
     }
   }
 }
+
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     const handleKeydown = (event) => {
-      event.preventDefault();
       switch (event.key) {
         case 'Enter':
           dispatch({
@@ -106,6 +105,22 @@ function App() {
       window.removeEventListener('keydown', handleKeydown);
     };
   }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (state.gameStatus !== 'playing') {
+        if (state.gameStatus === 'complete') {
+          alert('你答對了!!');
+        }
+        if (state.gameStatus === 'fail') {
+          alert('再多嘗試幾次吧~~');
+        }
+        dispatch({
+          type: 'RESET',
+        });
+      }
+    }, 100);
+  }, [state.gameStatus]);
 
   return (
     <div className="flex flex-col w-[350px] mx-auto mt-5">
