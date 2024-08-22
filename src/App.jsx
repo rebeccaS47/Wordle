@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react';
-import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { db } from './firebase/firebase.config';
+import { collection, getDocs, query } from 'firebase/firestore';
 
 const rows = 6;
 const cols = 5;
