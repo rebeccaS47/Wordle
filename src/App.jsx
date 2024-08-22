@@ -63,15 +63,35 @@ function reducer(state, action) {
   }
 }
 
-function getColor(letter, i, j, row) {
-  if (!letter) return 'bg-white';
-  if (i < row) {
-    if (letter === ans[j]) return 'bg-green-500';
-    if (ans.includes(letter)) return 'bg-yellow-500';
-    else {
-      return 'bg-gray-500';
-    }
+function getColors(row, rowIndex, nowRow) {
+  let tempAnsArr = [...ans];
+
+  if (rowIndex >= nowRow) {
+    return row.map(() => 'bg-white');
   }
+
+  let colors = row.map((letter, j) => {
+    if (letter === ans[j]) {
+      tempAnsArr[j] = null;
+      return 'bg-green-500';
+    }
+    return null;
+  });
+
+  colors = colors.map((color, j) => {
+    if (color === null) {
+      let notExactMatch = tempAnsArr.indexOf(row[j]);
+      if (notExactMatch !== -1) {
+        tempAnsArr[notExactMatch] = null;
+        return 'bg-yellow-500';
+      } else {
+        return 'bg-gray-500';
+      }
+    }
+    return color;
+  });
+
+  return colors;
 }
 
 function App() {
@@ -124,21 +144,21 @@ function App() {
 
   return (
     <div className="flex flex-col w-[350px] mx-auto mt-5">
-      {state.array.map((row, i) => (
-        <div key={i} className="flex justify-between mb-2">
-          {row.map((cell, j) => {
-            const bgcolor = getColor(cell, i, j, state.nowRow);
-            return (
+      {state.array.map((row, i) => {
+        const colors = getColors(row, i, state.nowRow);
+        return (
+          <div key={i} className="flex justify-between mb-2">
+            {row.map((cell, j) => (
               <div
                 key={j}
-                className={`flex items-center justify-center border border-gray-300 w-[62px] h-[62px] text-base ${bgcolor}`}
+                className={`flex items-center justify-center border border-gray-300 w-[62px] h-[62px] text-base ${colors[j]}`}
               >
                 {cell}
               </div>
-            );
-          })}
-        </div>
-      ))}
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
